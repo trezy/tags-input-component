@@ -1,0 +1,27 @@
+{
+  "authors": [
+    {
+      "email": "<tre@trezy.com>",
+      "homepage": "http://trezy.com",
+      "name": "Trezy"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/trezy/rafael/issues"
+  },
+  "description": "Tags input written with vanilla Javascript",
+  "homepage": "https://github.com/trezy/taggert#readme",
+  "ignore": [
+    "**/.*",
+    "test",
+    "package.json",
+    "README.md"
+  ],
+  "license": "MIT",
+  "main": "tags-input.js",
+  "name": "tags-input-component",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trezy/rafael.git"
+  }
+}
