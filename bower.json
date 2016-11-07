@@ -7,10 +7,10 @@
     }
   ],
   "bugs": {
-    "url": "https://github.com/trezy/rafael/issues"
+    "url": "https://github.com/trezy/tags-input-component/issues"
   },
   "description": "Tags input written with vanilla Javascript",
-  "homepage": "https://github.com/trezy/taggert#readme",
+  "homepage": "https://github.com/trezy/tags-input-component#readme",
   "ignore": [
     "**/.*",
     "test",
@@ -22,6 +22,6 @@
   "name": "tags-input-component",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/trezy/rafael.git"
+    "url": "git+https://github.com/trezy/tags-input-component.git"
   }
 }
