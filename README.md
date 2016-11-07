@@ -10,11 +10,11 @@ Import the script in your code and create a new `tags-input`:
 
 ```html
 <head>
-  <script src="tags-input.js">
+  <script src="tags-input.js"></script>
 </head>
 
 <body>
-  <tags-input data-multiple>
+  <tags-input data-multiple></tags-input>
 </body>
 ```
 
@@ -56,7 +56,9 @@ tagsInput.addEventListener('search', function (event) {
 
 You can also check out a live demo [here](https://rawgit.com/trezy/tags-input-component/master/examples/simple/index.html).
 
-## `tags-input` element
+## API
+
+### `tags-input` element
 
 This is where it all begins. a `tags-input` element can be mostly configured via attributes.
 
@@ -69,11 +71,11 @@ This is where it all begins. a `tags-input` element can be mostly configured via
 
 Any of these attributes can be set as a boolean attribute, e.g. `<tags-input data-multiple>`, or an attribute with a boolean string, e.g. `<tags-input data-multiple="true" data-new="false">`.
 
-## Events
+### Events
 
 The `tags-input` element works much like a regular `input` element. In addition to triggering the same events as a regular `input` element, it also triggers some unique events that make it easier to react to changes in the `tags-input`.
 
-### `add`
+#### `add`
 
 This event is triggered when a `tags-input`'s input is converted to a tag. The tag that was added can be accessed via `event.detail`.
 
@@ -83,7 +85,7 @@ tagsInput.addEventListener('add', function (event) {
 })
 ```
 
-### `error`
+#### `error`
 
 This event is triggered when the user tries to add an invalid tag, or a duplicate tag if the `tags-input` doesn't have the `allow-new` property. The `event.detail` property will contain a string of either `invalid` or `duplicate` depending on what the error was.
 
@@ -93,7 +95,7 @@ tagsInput.addEventListener('error', function (event) {
 })
 ```
 
-### `remove`
+#### `remove`
 
 This event is triggered when a tag is removed from a `tags-input`. The tag that was removed can be accessed via `event.detail`.
 
@@ -103,7 +105,7 @@ tagsInput.addEventListener('remove', function (event) {
 })
 ```
 
-### `search`
+#### `search`
 
 The `search` event is the main event used for managing a `tags-input`. This is fired every time the user changes the content of the input -- much like the `input` event. The main difference is that the `search` event includes the full content of the input, rather than just the key pressed. This can be accessed via `event.detail`.
 
