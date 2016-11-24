@@ -706,6 +706,10 @@
     let selectedOption = this.optionList.querySelector('.focus')
     let value
 
+    if (!this.input.value) {
+      return
+    }
+
     if (this.allowNew) {
       value = this.input.value
     } else if (firstOption) {
