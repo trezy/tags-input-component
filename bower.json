@@ -13,6 +13,7 @@
   "homepage": "https://github.com/trezy/tags-input-component#readme",
   "ignore": [
     "**/.*",
+    "examples/",
     "test",
     "package.json",
     "README.md"
