@@ -211,9 +211,11 @@
     this.input.addEventListener('keydown', this.handleKeybinds.bind(this))
     this.input.addEventListener('input', this.handleInput.bind(this))
     this.input.addEventListener('focus', () => {
+      this.setAttribute('data-focus', '')
       this.showOptions()
     })
     this.input.addEventListener('blur', () => {
+      this.removeAttribute('data-focus')
       this.hideOptions()
     })
 
