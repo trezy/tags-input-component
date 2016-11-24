@@ -260,6 +260,8 @@
   prototype.createRemoveButton = function createRemoveButton (tag) {
     let removeButton = document.createElement('button')
 
+    removeButton.innerHTML = '&times;'
+
     removeButton.addEventListener('mousedown', this.removeTag.bind(this, tag))
 
     return removeButton
@@ -296,7 +298,23 @@
         'flex-grow: 1;' +
         'flex-shrink: 0;' +
         'min-width: 20%;' +
+        'outline: none;' +
         'padding: 1rem 1.5rem;' +
+      '}' +
+
+      ':host button {' +
+        'background: none;' +
+        'background-color: rgba(0, 0, 0, 0);' +
+        'border: none;' +
+        'border-radius: 0;' +
+        'flex-grow: 1;' +
+        'margin: 0;' +
+        'margin-left: 0.5rem;' +
+        'padding: 0 0.5rem;' +
+      '}' +
+
+      ':host button:hover {' +
+        'background-color: rgba(0, 0, 0, 0.3);' +
       '}' +
 
       ':host .options,' +
@@ -326,7 +344,6 @@
 
       ':host .options .focus {' +
         'background-color: lightgrey;' +
-  //      'color: white;' +
       '}' +
 
       ':host .tags {' +
@@ -340,7 +357,7 @@
       ':host .tags li {' +
         'background-color: lightgrey;' +
         'margin: 0.5rem;' +
-        'padding: 0 0.5rem;' +
+        'padding: 0 0 0 0.5rem;' +
       '}' +
 
       ':host .tags .focus {' +
