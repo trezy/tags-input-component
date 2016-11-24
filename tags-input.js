@@ -419,6 +419,30 @@
 
 
   /******************************************************************************\
+    findOption
+  \******************************************************************************/
+
+  prototype.findOption = function findOption (option) {
+    let queryString
+
+    if (typeof option === 'string') {
+      queryString = `[data-value=${option}]`
+    } else {
+      if (option.id) {
+        queryString = `[data-id='${option.id}']`
+      } else {
+        queryString = `[data-value='${option.value}']`
+      }
+    }
+
+    return this.optionList.querySelector(queryString)
+  }
+
+
+
+
+
+  /******************************************************************************\
     focusOption
   \******************************************************************************/
 
@@ -989,6 +1013,10 @@
     }
 
     options.forEach(option => {
+      if (merge && this.findOption(option)) {
+        return
+      }
+
       let optionElement = this.createOption(option)
 
       optionElement.addEventListener('mousedown', this.handleOptionClick.bind(this))
