@@ -175,6 +175,9 @@
   \******************************************************************************/
 
   prototype.createdCallback = function createdCallback () {
+    // Add bindings for Backbone.Stickit
+    this.initializeStickit()
+
     this.updateAttribute('data-duplicates', 'allowDuplicates')
     this.updateAttribute('data-multiple', 'allowMultiple')
     this.updateAttribute('data-new', 'allowNew')
@@ -745,6 +748,27 @@
 
   prototype.hideOptions = function hideOptions () {
     this.optionList.classList.add('hide')
+  }
+
+
+
+
+
+  /******************************************************************************\
+    initializeStickit
+  \******************************************************************************/
+
+  prototype.initializeStickit = function initializeStickit () {
+    if (Backbone && Backbone.Stickit) {
+      Backbone.Stickit.addHandler({
+        events: ['blur'],
+        getVal: function ($el, event, options) {
+          return $el.val()
+        },
+        selector: 'tags-input'
+
+      })
+    }
   }
 
 
