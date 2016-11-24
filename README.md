@@ -1,9 +1,3 @@
-Rafael.js is a simple client side rafael based on the [`requestAnimationFrame`](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame) loop. Typically you may use something like [`window.setInterval()`](https://developer.mozilla.org/en-US/docs/Web/API/WindowTimers/setInterval) or [`window.setTimeout()`](https://developer.mozilla.org/en-US/docs/Web/API/WindowTimers/setTimeout) to achieve this.
-
-However, `requestAnimationFrame` allows us to utilize the GPU, avoiding the performance bottlenecks of those other methods. `requestAnimationFrame` is intended to allow Javascript animations to utilize the computer's GPU so it can be handled at ~60fps (performance depends on the machine). Rafael just makes it easy to control multiple tasks running on the `requestAnimationFrame` loop.
-
-**NOTE:** This plugin will make it really, *really*, ***really*** easy to bog down your app. Schedule with caution.
-
 ## Usage
 
 Import the script in your code and create a new `tags-input`:
@@ -114,3 +108,19 @@ tagsInput.addEventListener('search', function (event) {
   console.log(event.detail)
 })
 ```
+
+### Methods
+
+The `tags-input` element exposes methods to make it easier to interact with.
+
+#### `clearInput()`
+
+Empties the contents of the `tags-input`'s text box. *This does not remove tags.*
+
+#### `clearOptions()`
+
+Empties the contents of the dropdown list. This is useful when using `updateOptions` with `merge` set to `true`.
+
+#### `updateOptions(options, merge)`
+
+Pass an array of options to be displayed in the dropdown list. Options can be either strings or objects. Objects must have a `value` property which will be displayed, and may optionally have an `id` property.
