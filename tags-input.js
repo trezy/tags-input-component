@@ -21,11 +21,11 @@
       this.value.push(value)
       this.tagList.appendChild(this.createTag(value))
 
+      this.triggerEvent('add', value)
+
       this.log('groupCollapsed', 'adding tag')
       this.log('added tag:', value)
       this.log('groupEnd')
-
-      this.triggerEvent('add', value)
 
       return true
     }
@@ -235,6 +235,7 @@
 
     if (typeof option === 'string') {
       optionElement.innerHTML = option
+      optionElement.setAttribute('data-value', option)
 
     } else {
       optionElement.innerHTML = option.value
