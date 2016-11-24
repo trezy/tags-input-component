@@ -334,6 +334,7 @@
         'right: 0;' +
         'top: 100%;' +
         'width: 100%;' +
+        'z-index: 1;' +
       '}' +
 
       ':host .options:empty {' +
@@ -832,7 +833,6 @@
           return $el.val()
         },
         selector: 'tags-input'
-
       })
     }
   }
