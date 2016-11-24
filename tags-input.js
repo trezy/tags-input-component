@@ -825,7 +825,7 @@
   \******************************************************************************/
 
   prototype.initializeStickit = function initializeStickit () {
-    if (Backbone && Backbone.Stickit) {
+    if (window.Backbone && window.Backbone.Stickit) {
       Backbone.Stickit.addHandler({
         events: ['blur'],
         getVal: function ($el, event, options) {
