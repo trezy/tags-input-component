@@ -15,23 +15,23 @@
   \******************************************************************************/
 
   prototype.addTag = function addTag (value) {
-    this.log('groupCollapsed', 'adding tag')
+    let isDuplicate = this.isDuplicate(value)
 
-    let isDuplicate = !this.checkDuplicate(value)
-    this.log('duplicate:', isDuplicate)
-
-    if (!isDuplicate) {
+    if (this.allowDuplicates || !isDuplicate) {
       this.value.push(value)
       this.tagList.appendChild(this.createTag(value))
-      this.dispatchEvent(new CustomEvent('add', {
-        detail: value
-      }))
+
+      this.log('groupCollapsed', 'adding tag')
       this.log('added tag:', value)
+      this.log('groupEnd')
+
+      this.triggerEvent('add', value)
+
+      return true
     }
 
-    this.log('groupEnd')
-
-    return true
+    this.handleDuplicate()
+    return false
   }
 
 
@@ -107,23 +107,6 @@
 
   prototype.blurTag = function blurTag (tag) {
     tag.classList.remove('focus')
-  }
-
-
-
-
-
-  /******************************************************************************\
-    checkDuplicate
-  \******************************************************************************/
-
-  prototype.checkDuplicate = function checkDuplicate (value) {
-    if (!this.allowDuplicates && this.isDuplicate(value)) {
-      this.handleDuplicate()
-      return true
-    }
-
-    return false
   }
 
 
@@ -248,7 +231,18 @@
   prototype.createOption = function createOption (option) {
     let optionElement = document.createElement('li')
 
-    optionElement.innerHTML = option
+    if (typeof option === 'string') {
+      optionElement.innerHTML = option
+
+    } else {
+      optionElement.innerHTML = option.value
+      optionElement.setAttribute('data-value', option.value)
+
+      if (option.id) {
+        optionElement.setAttribute('data-id', option.id)
+      }
+    }
+
     optionElement.addEventListener('mouseover', this.focusOption.bind(this, optionElement))
     optionElement.addEventListener('mouseout', this.blurOption.bind(this, optionElement))
 
@@ -372,6 +366,16 @@
   prototype.createTag = function createTag (value) {
     let tag = document.createElement('li')
 
+    if (typeof value === 'string') {
+      tag.setAttribute('data-value', value)
+    } else {
+      tag.setAttribute('data-value', value.value)
+
+      if (value.id) {
+        tag.setAttribute('data-id', value.id)
+      }
+    }
+
     tag.appendChild(this.createTextWrapper(value))
     tag.appendChild(this.createRemoveButton(tag))
 
@@ -389,7 +393,11 @@
   prototype.createTextWrapper = function createTextWrapper (value) {
     let textWrapper = document.createElement('span')
 
-    textWrapper.innerHTML = value
+    if (typeof value === 'string') {
+      textWrapper.innerHTML = value
+    } else {
+      textWrapper.innerHTML = value.value
+    }
 
     return textWrapper
   }
@@ -452,13 +460,30 @@
 
 
   /******************************************************************************\
+    getElementValue
+  \******************************************************************************/
+
+  prototype.getElementValue = function getElementValue (element) {
+    if (element.hasAttribute('data-id')) {
+      return {
+        id: element.getAttribute('data-id'),
+        value: element.getAttribute('data-value')
+      }
+    } else {
+      return element.getAttribute('data-value')
+    }
+  }
+
+
+
+
+
+  /******************************************************************************\
     handleDuplicate
   \******************************************************************************/
 
   prototype.handleDuplicate = function handleDuplicate () {
-    this.dispatchEvent(new CustomEvent('error', {
-      detail: 'duplicate'
-    }))
+    this.triggerEvent('error', 'duplicate')
     this.log('warn', 'duplicate tag')
   }
 
@@ -471,9 +496,7 @@
   \******************************************************************************/
 
   prototype.handleInvalid = function handleInvalid () {
-    this.dispatchEvent(new CustomEvent('error', {
-      detail: 'invalid'
-    }))
+    this.triggerEvent('error', 'invalid')
     this.log('warn', 'invalid tag')
   }
 
@@ -631,13 +654,7 @@
     event.preventDefault()
 
     let target = event.target
-    let value = target.innerText
-
-    this.log('groupCollapsed', 'handleOptionClick')
-    this.log('value', value)
-    this.log('target', target)
-    this.log(this.input)
-    this.log('groupEnd')
+    let value = this.getElementValue(target)
 
     if (this.addTag(value)) {
       this.clearInput()
@@ -645,6 +662,12 @@
     }
 
     this.input.focus()
+
+    this.log('groupCollapsed', 'handleOptionClick')
+    this.log('value', value)
+    this.log('target', target)
+    this.log(this.input)
+    this.log('groupEnd')
   }
 
 
@@ -662,11 +685,11 @@
     if (this.allowNew) {
       value = this.input.value
     } else if (firstOption) {
-      value = firstOption.innerText
+      value = this.getElementValue(firstOption)
     }
 
     if (selectedOption) {
-      value = selectedOption.innerText
+      value = this.getElementValue(selectedOption)
     }
 
     if (!this.allowNew && !firstOption) {
@@ -675,10 +698,6 @@
     }
 
     if (value) {
-      if (this.checkDuplicate(value)) {
-        return
-      }
-
       event.preventDefault()
 
       this.addTag(value)
@@ -780,7 +799,15 @@
   \******************************************************************************/
 
   prototype.isDuplicate = function isDuplicate (value) {
-    return this.value.indexOf(value) !== -1
+    let ret
+
+    if (typeof value === 'string') {
+      ret = this.value.indexOf(value) !== -1
+    } else {
+      ret = this.matchValue(value) !== -1
+    }
+
+    return ret
   }
 
 
@@ -811,24 +838,50 @@
 
 
   /******************************************************************************\
+    matchValue
+  \******************************************************************************/
+
+  prototype.matchValue = function matchValue (value) {
+    for (let i = 0, length = this.value.length; i < length; i++) {
+      if (this.value[i].id && value.id) {
+        if (this.value[i].id === value.id) {
+          return i
+        }
+      } else if (this.value[i].value === value.value) {
+        return i
+      }
+    }
+
+    return -1
+  }
+
+
+
+
+
+  /******************************************************************************\
     removeTag
   \******************************************************************************/
 
   prototype.removeTag = function removeTag (tag) {
-    this.log('groupCollapsed', 'removing tag')
+    let value = this.getElementValue(tag)
+    let index
 
-    let value = tag.querySelector('span').innerText
-    this.log('value:', value)
+    if (typeof value === 'string') {
+      index = this.value.indexOf(value)
+    } else {
+      this.matchValue(value)
+    }
 
-    this.value.splice(this.value.indexOf(value), 1)
+    this.value.splice(index, 1)
 
     tag.querySelector('button').removeEventListener('mousedown', this.removeTag)
     tag.remove()
 
-    this.dispatchEvent(new CustomEvent('remove', {
-      detail: value
-    }))
+    this.triggerEvent('remove', value)
 
+    this.log('groupCollapsed', 'removing tag')
+    this.log('value:', value)
     this.log('groupEnd')
   }
 
@@ -841,20 +894,12 @@
   \******************************************************************************/
 
   prototype.search = function search (query) {
-    this.clearOptions()
-
-    this.log('groupCollapsed', 'search')
-
     if (query) {
-      this.dispatchEvent(new CustomEvent('search', {
-        detail: query
-      }))
-
-      this.log('query:', query)
-    } else {
-      this.log('no query')
+      this.triggerEvent('search', query)
     }
 
+    this.log('groupCollapsed', 'search')
+    this.log(query ? ('query:' + query) : 'no query')
     this.log('groupEnd')
   }
 
@@ -893,6 +938,20 @@
 
 
   /******************************************************************************\
+    triggerEvent
+  \******************************************************************************/
+
+  prototype.triggerEvent = function triggerEvent (type, detail) {
+    this.dispatchEvent(new CustomEvent(type, {
+      detail: detail
+    }))
+  }
+
+
+
+
+
+  /******************************************************************************\
     updateAttribute
   \******************************************************************************/
 
@@ -924,9 +983,11 @@
     updateOptions
   \******************************************************************************/
 
-  prototype.updateOptions = function updateOptions (options) {
-    this.log('groupCollapsed', 'updating options')
-    this.log('options:', options)
+  prototype.updateOptions = function updateOptions (options, merge) {
+    if (!merge) {
+      this.clearOptions()
+    }
+
     options.forEach(option => {
       let optionElement = this.createOption(option)
 
@@ -934,6 +995,9 @@
 
       this.optionList.appendChild(optionElement)
     })
+
+    this.log('groupCollapsed', 'updating options')
+    this.log('options:', options)
     this.log('groupEnd')
   }
 
