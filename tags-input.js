@@ -181,7 +181,7 @@
 
     let startingValue = this.getAttribute('value')
     if (startingValue) {
-      startingValue.split(',').forEach(this.addTag)
+      startingValue.split(',').forEach(this.addTag.bind(this))
     }
 
     this.optionList.classList.add('options')
@@ -832,6 +832,18 @@
         events: ['blur'],
         getVal: function ($el, event, options) {
           return $el.val()
+        },
+        onGet: (value, options) => {
+          if (value) {
+            if (Array.isArray(value)) {
+              value.forEach(this.addTag)
+
+            } else if (typeof value === 'string') {
+              value.split(',').forEach(this.addTag.bind(this))
+            }
+          }
+
+          return value
         },
         selector: 'tags-input'
       })
