@@ -825,4 +825,3 @@
     prototype: prototype
   });
 })();
-//# sourceMappingURL=tags-input.js.map
