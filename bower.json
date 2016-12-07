@@ -19,7 +19,7 @@
     "README.md"
   ],
   "license": "MIT",
-  "main": "tags-input.js",
+  "main": "dist/tags-input.js",
   "name": "tags-input-component",
   "repository": {
     "type": "git",

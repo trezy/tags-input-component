@@ -1,5 +1,5 @@
 .*
 examples/
 test
-package.json
+bower.json
 README.md
