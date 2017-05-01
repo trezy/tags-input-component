@@ -1,10 +1,26 @@
 <!doctype html>
 
 <head>
+  <style type="text/css">
+    tags-input {
+      --close-button-background-color: red;
+      --close-button-background-color-hover: green;
+      --close-button-text-color: yellow;
+      --close-button-text-color-hover: blue;
+      --option-background-color: red;
+      --option-background-color-focus: green;
+      --option-text-color: yellow;
+      --option-text-color-focus: blue;
+      --tag-background-color: red;
+      --tag-background-color-focus: green;
+      --tag-text-color: yellow;
+      --tag-text-color-focus: blue;
+    }
+  </style>
   <script src="../../tags-input.js"></script>
 </head>
 
 <body>
-  <tags-input data-debug data-multiple></tags-input>
+  <tags-input allow-multiple debug placeholder="Blep"></tags-input>
   <script src="index.js"></script>
 </body>

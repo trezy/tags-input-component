@@ -1,1062 +1,1132 @@
+/*
+  --close-button-background-color
+  --close-button-background-color-hover
+  --close-button-text-color
+  --close-button-text-color-hover
+  --option-background-color
+  --option-background-color-focus
+  --option-text-color
+  --option-text-color-focus
+  --tag-background-color
+  --tag-background-color-focus
+  --tag-text-color
+  --tag-text-color-focus
+*/
+
 (function () {
 
-  /******************************************************************************\
+  /****************************************************************************\
     prototype
-  \******************************************************************************/
+  \****************************************************************************/
 
-  let prototype = Object.create(HTMLElement.prototype)
+  class TagsInput extends HTMLElement {
+
+    /**************************************************************************\
+      observedAttributes
+    \**************************************************************************/
+
+    static get observedAttributes () {
+      return [
+        'allow-duplicates',
+        'allow-multiple',
+        'allow-new',
+        'debug',
+        'placeholder',
+      ]
+    }
 
 
 
 
 
-  /******************************************************************************\
-    addTag
-  \******************************************************************************/
+    /**************************************************************************\
+      addTag
+    \**************************************************************************/
 
-  prototype.addTag = function addTag (value) {
-    let isDuplicate = this.isDuplicate(value)
+    addTag (value) {
+      let isDuplicate = this.isDuplicate(value)
 
-    if (this.allowDuplicates || !isDuplicate) {
-      this.value.push(value)
-      this.tagList.appendChild(this.createTag(value))
+      if (this.allowDuplicates || !isDuplicate) {
+        this.value.push(value)
+        this.tagList.appendChild(this.createTag(value))
 
-      this.log('groupCollapsed', 'adding tag')
-      this.log('added tag:', value)
+        this.log('groupCollapsed', 'adding tag')
+        this.log('added tag:', value)
+        this.log('groupEnd')
+
+        this.triggerEvent('add', value)
+
+        return true
+      }
+
+      this.handleDuplicate()
+      return false
+    }
+
+
+
+
+
+    /**************************************************************************\
+      attributeChangedCallback
+    \**************************************************************************/
+
+    attributeChangedCallback (attribute, oldValue, newValue) {
+      let prop = null
+
+      this.log('groupCollapsed', 'attribute changed')
+      this.log('attribute:', attribute)
+
+      switch (attribute) {
+        case 'allow-duplicates':
+          prop = 'allowDuplicates'
+          break
+        case 'allow-multiple':
+          prop = 'allowMultiple'
+          break
+        case 'allow-new':
+          prop = 'allowNew'
+          break
+        case 'debug':
+          prop = 'debug'
+          break
+        case 'placeholder':
+          prop = 'placeholder'
+          break
+      }
+
+      if (prop) {
+        this.updateAttribute(attribute, prop)
+        this.log('prop:', prop)
+      }
+
+      this.log('old value:', oldValue)
+      this.log('new value:', newValue)
+      this.log('groupEnd')
+    }
+
+
+
+
+
+    /**************************************************************************\
+      blurOption
+    \**************************************************************************/
+
+    blurOption (option) {
+      option.classList.remove('focus')
+    }
+
+
+
+
+
+    /**************************************************************************\
+      blurTag
+    \**************************************************************************/
+
+    blurTag (tag) {
+      tag.classList.remove('focus')
+    }
+
+
+
+
+
+    /**************************************************************************\
+      clearInput
+    \**************************************************************************/
+
+    clearInput () {
+      this.input.value = ''
+    }
+
+
+
+
+
+    /**************************************************************************\
+      clearOptions
+    \**************************************************************************/
+
+    clearOptions () {
+      this.optionList.innerHTML = ''
+    }
+
+
+
+
+
+    /**************************************************************************\
+      clearSelectedTag
+    \**************************************************************************/
+
+    clearSelectedTag () {
+      let selectedTag = this.tagList.querySelector('.focus')
+
+      if (selectedTag) {
+        this.blurTag(selectedTag)
+      }
+    }
+
+
+
+
+
+    /**************************************************************************\
+      connectedCallback
+    \**************************************************************************/
+
+    connectedCallback () {
+      this.log('tags-input attached!', this)
+    }
+
+
+
+
+
+    /**************************************************************************\
+      constructor
+    \**************************************************************************/
+
+    constructor () {
+      super()
+
+      // Add bindings for Backbone.Stickit
+      this.initializeStickit()
+
+      this.updateAttribute('allow-duplicates', 'allowDuplicates')
+      this.updateAttribute('allow-multiple', 'allowMultiple')
+      this.updateAttribute('allow-new', 'allowNew')
+      this.updateAttribute('debug', 'debug')
+      this.updateAttribute('placeholder', 'placeholder')
+      this.identifier = this.getAttribute('id') || this.getAttribute('name')
+
+      this.log('groupCollapsed', 'tags-input')
+      this.log('Allow Duplicates:', this.allowDuplicates)
+      this.log('Allow Multiple:', this.allowMultiple)
+      this.log('Allow New:', this.allowNew)
+      this.log('Placeholder:', this.placeholder)
+      this.log('Debug:', this.debug)
       this.log('groupEnd')
 
-      this.triggerEvent('add', value)
+      this.value = []
 
-      return true
-    }
+      this.optionList = document.createElement('ol')
+      this.tagList = document.createElement('ul')
 
-    this.handleDuplicate()
-    return false
-  }
+      let startingValue = this.getAttribute('value')
+      if (startingValue) {
+        startingValue.split(',').forEach(this.addTag)
+      }
 
+      this.optionList.classList.add('options')
+      this.tagList.classList.add('tags')
 
-
-
-
-  /******************************************************************************\
-    attachedCallback
-  \******************************************************************************/
-
-  prototype.attachedCallback = function attachedCallback () {
-    this.log('tags-input attached!', this)
-  }
-
-
-
-
-
-  /******************************************************************************\
-    attributeChangedCallback
-  \******************************************************************************/
-
-  prototype.attributeChangedCallback = function attributeChangedCallback (attribute, oldValue, newValue) {
-    let prop = null
-
-    this.log('groupCollapsed', 'attribute changed')
-    this.log('attribute:', attribute)
-
-    switch (attribute) {
-      case 'data-duplicates':
-        prop = 'allowDuplicates'
-        break
-      case 'data-multiple':
-        prop = 'allowMultiple'
-        break
-      case 'data-new':
-        prop = 'allowNew'
-        break
-      case 'data-debug':
-        prop = 'debug'
-        break
-    }
-
-    if (prop) {
-      this.updateAttribute(attribute, prop)
-      this.log('prop:', prop)
-    }
-
-    this.log('old value:', oldValue)
-    this.log('new value:', newValue)
-    this.log('groupEnd')
-  }
-
-
-
-
-
-  /******************************************************************************\
-    blurOption
-  \******************************************************************************/
-
-  prototype.blurOption = function blurOption (option) {
-    option.classList.remove('focus')
-  }
-
-
-
-
-
-  /******************************************************************************\
-    blurTag
-  \******************************************************************************/
-
-  prototype.blurTag = function blurTag (tag) {
-    tag.classList.remove('focus')
-  }
-
-
-
-
-
-  /******************************************************************************\
-    clearInput
-  \******************************************************************************/
-
-  prototype.clearInput = function clearInput () {
-    this.input.value = ''
-  }
-
-
-
-
-
-  /******************************************************************************\
-    clearOptions
-  \******************************************************************************/
-
-  prototype.clearOptions = function clearOptions () {
-    this.optionList.innerHTML = ''
-  }
-
-
-
-
-
-  /******************************************************************************\
-    clearSelectedTag
-  \******************************************************************************/
-
-  prototype.clearSelectedTag = function clearSelectedTag () {
-    let selectedTag = this.tagList.querySelector('.focus')
-
-    if (selectedTag) {
-      this.blurTag(selectedTag)
-    }
-  }
-
-
-
-
-
-  /******************************************************************************\
-    createdCallback
-  \******************************************************************************/
-
-  prototype.createdCallback = function createdCallback () {
-    // Add bindings for Backbone.Stickit
-    this.initializeStickit()
-
-    this.updateAttribute('data-duplicates', 'allowDuplicates')
-    this.updateAttribute('data-multiple', 'allowMultiple')
-    this.updateAttribute('data-new', 'allowNew')
-    this.updateAttribute('data-debug', 'debug')
-    this.identifier = this.getAttribute('id') || this.getAttribute('name')
-
-    this.log('groupCollapsed', 'tags-input')
-    this.log('Allow Duplicates:', this.allowDuplicates)
-    this.log('Allow Multiple:', this.allowMultiple)
-    this.log('Allow New:', this.allowNew)
-    this.log('Debug:', this.debug)
-    this.log('groupEnd')
-
-    this.value = []
-
-    this.optionList = document.createElement('ol')
-    this.tagList = document.createElement('ul')
-
-    let startingValue = this.getAttribute('value')
-    if (startingValue) {
-      startingValue.split(',').forEach(this.addTag)
-    }
-
-    this.optionList.classList.add('options')
-    this.tagList.classList.add('tags')
-
-    this.hideOptions()
-
-    this.createShadowRoot()
-    this.shadowRoot.appendChild(this.createStylesheet())
-    this.shadowRoot.appendChild(this.tagList)
-    this.shadowRoot.appendChild(this.createInput())
-    this.shadowRoot.appendChild(this.optionList)
-  }
-
-
-
-
-
-  /******************************************************************************\
-    createInput
-  \******************************************************************************/
-
-  prototype.createInput = function createInput () {
-    this.input = document.createElement('input')
-
-    this.input.setAttribute('type', 'search')
-    this.input.addEventListener('keydown', this.handleKeybinds.bind(this))
-    this.input.addEventListener('input', this.handleInput.bind(this))
-    this.input.addEventListener('focus', () => {
-      this.setAttribute('data-focus', '')
-      this.showOptions()
-    })
-    this.input.addEventListener('blur', () => {
-      this.removeAttribute('data-focus')
       this.hideOptions()
-    })
 
-    return this.input
-  }
-
-
-
-
-
-  /******************************************************************************\
-    createOption
-  \******************************************************************************/
-
-  prototype.createOption = function createOption (option) {
-    let optionElement = document.createElement('li')
-
-    if (typeof option === 'string') {
-      optionElement.innerHTML = option
-
-    } else {
-      optionElement.innerHTML = option.value
-      optionElement.setAttribute('data-value', option.value)
-
-      if (option.id) {
-        optionElement.setAttribute('data-id', option.id)
-      }
+      this.attachShadow({ mode: 'open' })
+      this.shadowRoot.appendChild(this.createStylesheet())
+      this.shadowRoot.appendChild(this.tagList)
+      this.shadowRoot.appendChild(this.createInput())
+      this.shadowRoot.appendChild(this.optionList)
     }
 
-    optionElement.addEventListener('mouseover', this.focusOption.bind(this, optionElement))
-    optionElement.addEventListener('mouseout', this.blurOption.bind(this, optionElement))
-
-    return optionElement
-  }
 
 
 
 
+    /**************************************************************************\
+      createInput
+    \**************************************************************************/
 
-  /******************************************************************************\
-    createRemoveButton
-  \******************************************************************************/
+    createInput () {
+      this.input = document.createElement('input')
 
-  prototype.createRemoveButton = function createRemoveButton (tag) {
-    let removeButton = document.createElement('button')
+      this.input.setAttribute('type', 'search')
+      this.input.setAttribute('placeholder', this.placeholder)
+      this.input.addEventListener('keydown', this.handleKeybinds.bind(this))
+      this.input.addEventListener('input', this.handleInput.bind(this))
+      this.input.addEventListener('focus', () => {
+        this.setAttribute('data-focus', '')
+        this.showOptions()
+      })
+      this.input.addEventListener('blur', () => {
+        this.removeAttribute('data-focus')
+        this.hideOptions()
+      })
 
-    removeButton.innerHTML = '&times;'
-
-    removeButton.addEventListener('mousedown', this.removeTag.bind(this, tag))
-
-    return removeButton
-  }
-
-
-
-
-
-  /******************************************************************************\
-    createStylesheet
-  \******************************************************************************/
-
-  prototype.createStylesheet = function createStylesheet () {
-    let stylesheet = document.createElement('style')
-
-    stylesheet.innerHTML =
-      ':host {' +
-        'align-content: stretch;' +
-        'align-items: center;' +
-        'background-color: white;' +
-        'border: 1px solid black;' +
-        'display: flex;' +
-        'flex-wrap: wrap;' +
-        'position: relative;' +
-      '}' +
-
-  //    ':host * {' +
-  //      'box-sizing: border-box;'
-  //    '}' +
-
-      ':host input {' +
-        'border: none;' +
-        'flex-grow: 1;' +
-        'flex-shrink: 0;' +
-        'min-width: 20%;' +
-        'outline: none;' +
-        'padding: 1rem 1.5rem;' +
-      '}' +
-
-      ':host button {' +
-        'background: none;' +
-        'background-color: rgba(0, 0, 0, 0);' +
-        'border: none;' +
-        'border-radius: 0;' +
-        'flex-grow: 1;' +
-        'margin: 0;' +
-        'margin-left: 0.5rem;' +
-        'padding: 0 0.5rem;' +
-      '}' +
-
-      ':host button:hover {' +
-        'background-color: rgba(0, 0, 0, 0.3);' +
-      '}' +
-
-      ':host .options,' +
-      ':host .tags {' +
-        'list-style: none;' +
-        'margin: 0;' +
-        'padding: 0;' +
-      '}' +
-
-      ':host .options {' +
-        'background-color: white;' +
-        'border: 1px solid black;' +
-        'left: 0;' +
-        'position: absolute;' +
-        'right: 0;' +
-        'top: 100%;' +
-        'width: 100%;' +
-      '}' +
-
-      ':host .options:empty {' +
-        'display: none;' +
-      '}' +
-
-      ':host .options li {' +
-        'padding: 1rem;' +
-      '}' +
-
-      ':host .options .focus {' +
-        'background-color: lightgrey;' +
-      '}' +
-
-      ':host .tags {' +
-        'align-items: center;' +
-        'display: flex;' +
-        'flex-wrap: wrap;' +
-        'flex-shrink: 0;' +
-        'max-width: 100%;' +
-      '}' +
-
-      ':host .tags li {' +
-        'background-color: lightgrey;' +
-        'margin: 0.5rem;' +
-        'padding: 0 0 0 0.5rem;' +
-      '}' +
-
-      ':host .tags .focus {' +
-        'background-color: blue;' +
-        'color: white;' +
-      '}' +
-
-      ':host .hide {' +
-        'display: none;' +
-      '}'
-
-    return stylesheet
-  }
-
-
-
-
-
-  /******************************************************************************\
-    createTag
-  \******************************************************************************/
-
-  prototype.createTag = function createTag (value) {
-    let tag = document.createElement('li')
-
-    if (typeof value === 'string') {
-      tag.setAttribute('data-value', value)
-    } else {
-      tag.setAttribute('data-value', value.value)
-
-      if (value.id) {
-        tag.setAttribute('data-id', value.id)
-      }
+      return this.input
     }
 
-    tag.appendChild(this.createTextWrapper(value))
-    tag.appendChild(this.createRemoveButton(tag))
-
-    return tag
-  }
 
 
 
 
+    /**************************************************************************\
+      createOption
+    \**************************************************************************/
 
-  /******************************************************************************\
-    createTextWrapper
-  \******************************************************************************/
+    createOption (option) {
+      let optionElement = document.createElement('li')
 
-  prototype.createTextWrapper = function createTextWrapper (value) {
-    let textWrapper = document.createElement('span')
+      if (typeof option === 'string') {
+        optionElement.innerHTML = option
+        optionElement.setAttribute('data-value', option)
 
-    if (typeof value === 'string') {
-      textWrapper.innerHTML = value
-    } else {
-      textWrapper.innerHTML = value.value
-    }
-
-    return textWrapper
-  }
-
-
-
-
-
-  /******************************************************************************\
-    detachedCallback
-  \******************************************************************************/
-
-  prototype.detachedCallback = function detachedCallback () {
-    this.log('tags-input detached!', this)
-  }
-
-
-
-
-
-  /******************************************************************************\
-    findOption
-  \******************************************************************************/
-
-  prototype.findOption = function findOption (option) {
-    let queryString
-
-    if (typeof option === 'string') {
-      queryString = `[data-value=${option}]`
-    } else {
-      if (option.id) {
-        queryString = `[data-id='${option.id}']`
       } else {
-        queryString = `[data-value='${option.value}']`
-      }
-    }
+        optionElement.innerHTML = option.value
+        optionElement.setAttribute('data-value', option.value)
 
-    return this.optionList.querySelector(queryString)
-  }
-
-
-
-
-
-  /******************************************************************************\
-    focusOption
-  \******************************************************************************/
-
-  prototype.focusOption = function focusOption (option) {
-    let selectedOption = this.optionList.querySelector('.focus')
-    let selectedTag = this.tagList.querySelector('.focus')
-
-    if (selectedOption) {
-      this.blurOption(selectedOption)
-    }
-
-    if (selectedTag) {
-      this.blurTag(selectedTag)
-    }
-
-    option.classList.add('focus')
-  }
-
-
-
-
-
-  /******************************************************************************\
-    focusTag
-  \******************************************************************************/
-
-  prototype.focusTag = function focusTag (tag) {
-    let selectedTag = this.tagList.querySelector('.focus')
-
-    if (selectedTag) {
-      this.blurTag(selectedTag)
-    }
-
-    tag.classList.add('focus')
-  }
-
-
-
-
-
-  /******************************************************************************\
-    getElementValue
-  \******************************************************************************/
-
-  prototype.getElementValue = function getElementValue (element) {
-    if (element.hasAttribute('data-id')) {
-      return {
-        id: element.getAttribute('data-id'),
-        value: element.getAttribute('data-value')
-      }
-    } else {
-      return element.getAttribute('data-value')
-    }
-  }
-
-
-
-
-
-  /******************************************************************************\
-    handleDuplicate
-  \******************************************************************************/
-
-  prototype.handleDuplicate = function handleDuplicate () {
-    this.triggerEvent('error', 'duplicate')
-    this.log('warn', 'duplicate tag')
-  }
-
-
-
-
-
-  /******************************************************************************\
-    handleInvalid
-  \******************************************************************************/
-
-  prototype.handleInvalid = function handleInvalid () {
-    this.triggerEvent('error', 'invalid')
-    this.log('warn', 'invalid tag')
-  }
-
-
-
-
-
-  /******************************************************************************\
-    handleDelete
-  \******************************************************************************/
-
-  prototype.handleDelete = function handleDelete () {
-    if (this.shouldCaptureKeybind()) {
-      event.preventDefault()
-
-      let selectedTag = this.tagList.querySelector('.focus')
-
-      if (selectedTag) {
-        let previousTag = selectedTag.previousElementSibling
-
-        if (previousTag) {
-          this.focusTag(previousTag)
+        if (option.id) {
+          optionElement.setAttribute('data-id', option.id)
         }
-
-        this.removeTag(selectedTag)
-
-      } else if (selectedTag = this.tagList.querySelector('li:last-of-type')) {
-        this.focusTag(selectedTag)
       }
+
+      optionElement.addEventListener('mouseover', this.focusOption.bind(this, optionElement))
+      optionElement.addEventListener('mouseout', this.blurOption.bind(this, optionElement))
+
+      return optionElement
     }
-  }
 
 
 
 
 
-  /******************************************************************************\
-    handleDownArrow
-  \******************************************************************************/
+    /**************************************************************************\
+      createRemoveButton
+    \**************************************************************************/
 
-  prototype.handleDownArrow = function handleDownArrow () {
-    event.preventDefault()
+    createRemoveButton (tag) {
+      let removeButton = document.createElement('button')
 
-    let selectedOption = this.optionList.querySelector('.focus')
+      removeButton.innerHTML = '&times;'
 
-    if (selectedOption) {
-      let nextOption = selectedOption.nextElementSibling
+      removeButton.addEventListener('mousedown', this.removeTag.bind(this, tag))
 
-      if (nextOption) {
-        this.blurOption(selectedOption)
-        this.focusOption(nextOption)
+      return removeButton
+    }
+
+
+
+
+
+    /**************************************************************************\
+      createStylesheet
+    \**************************************************************************/
+
+    createStylesheet () {
+      let stylesheet = document.createElement('style')
+
+      stylesheet.innerHTML =
+        ':host {' +
+          'align-content: stretch;' +
+          'align-items: center;' +
+          'background-color: white;' +
+          'border: 1px solid black;' +
+          'display: flex;' +
+          'flex-wrap: wrap;' +
+          'position: relative;' +
+        '}' +
+
+        ':host input {' +
+          'border: none;' +
+          'flex-grow: 1;' +
+          'flex-shrink: 0;' +
+          'font-family: inherit;' +
+          'font-weight: inherit;' +
+          'font-size: inherit;' +
+          'min-width: 20%;' +
+          'outline: none;' +
+          'padding: 1rem 1.5rem;' +
+        '}' +
+
+        ':host button {' +
+          'background: none;' +
+          'background-color: var(--close-button-background-color, rgba(0, 0, 0, 0));' +
+          'border: none;' +
+          'border-radius: 0;' +
+          'color: var(--close-button-text-color, black);' +
+          'flex-grow: 1;' +
+          'margin: 0;' +
+          'margin-left: 0.5rem;' +
+          'padding: 0 0.5rem;' +
+        '}' +
+
+        ':host button:hover {' +
+          'background-color: var(--close-button-background-color-hover, rgba(0, 0, 0, 0.3));' +
+          'color: var(--close-button-text-color-hover, white);' +
+        '}' +
+
+        ':host .options,' +
+        ':host .tags {' +
+          'list-style: none;' +
+          'margin: 0;' +
+          'padding: 0;' +
+        '}' +
+
+        ':host .options {' +
+          'background-color: white;' +
+          'border: 1px solid black;' +
+          'left: 0;' +
+          'position: absolute;' +
+          'right: 0;' +
+          'top: 100%;' +
+          'width: 100%;' +
+        '}' +
+
+        ':host .options:empty {' +
+          'display: none;' +
+        '}' +
+
+        ':host .options li {' +
+          'background-color: var(--option-background-color);' +
+          'color: var(--option-text-color);' +
+          'padding: 1rem;' +
+        '}' +
+
+        ':host .options .focus {' +
+          'background-color: var(--option-background-color-focus, lightgrey);' +
+          'color: var(--option-text-color-focus);' +
+        '}' +
+
+        ':host .tags {' +
+          'align-items: center;' +
+          'display: flex;' +
+          'flex-wrap: wrap;' +
+          'flex-shrink: 0;' +
+          'max-width: 100%;' +
+        '}' +
+
+        ':host .tags li {' +
+          'background-color: var(--tag-background-color, lightgrey);' +
+          'color: var(--tag-text-color);' +
+          'margin: 0.5rem;' +
+          'padding: 0 0 0 0.5rem;' +
+        '}' +
+
+        ':host .tags .focus {' +
+          'background-color: var(--tag-background-color-focus, blue);' +
+          'color: var(--tag-text-color-focus, white);' +
+        '}' +
+
+        ':host .hide {' +
+          'display: none;' +
+        '}'
+
+      return stylesheet
+    }
+
+
+
+
+
+    /**************************************************************************\
+      createTag
+    \**************************************************************************/
+
+    createTag (value) {
+      let tag = document.createElement('li')
+
+      if (typeof value === 'string') {
+        tag.setAttribute('data-value', value)
+      } else {
+        tag.setAttribute('data-value', value.value)
+
+        if (value.id) {
+          tag.setAttribute('data-id', value.id)
+        }
       }
-    } else {
-      selectedOption = this.optionList.querySelector('li:first-of-type')
+
+      tag.appendChild(this.createTextWrapper(value))
+      tag.appendChild(this.createRemoveButton(tag))
+
+      return tag
+    }
+
+
+
+
+
+    /**************************************************************************\
+      createTextWrapper
+    \**************************************************************************/
+
+    createTextWrapper (value) {
+      let textWrapper = document.createElement('span')
+
+      if (typeof value === 'string') {
+        textWrapper.innerHTML = value
+      } else {
+        textWrapper.innerHTML = value.value
+      }
+
+      return textWrapper
+    }
+
+
+
+
+
+    /**************************************************************************\
+      disconnectedCallback
+    \**************************************************************************/
+
+    disconnectedCallback () {
+      this.log('tags-input detached!', this)
+    }
+
+
+
+
+
+    /**************************************************************************\
+      findOption
+    \**************************************************************************/
+
+    findOption (option) {
+      let queryString
+
+      if (typeof option === 'string') {
+        queryString = `[data-value=${option}]`
+      } else {
+        if (option.id) {
+          queryString = `[data-id='${option.id}']`
+        } else {
+          queryString = `[data-value='${option.value}']`
+        }
+      }
+
+      return this.optionList.querySelector(queryString)
+    }
+
+
+
+
+
+    /**************************************************************************\
+      focusOption
+    \**************************************************************************/
+
+    focusOption (option) {
+      let selectedOption = this.optionList.querySelector('.focus')
+      let selectedTag = this.tagList.querySelector('.focus')
 
       if (selectedOption) {
-        this.focusOption(selectedOption)
+        this.blurOption(selectedOption)
       }
+
+      if (selectedTag) {
+        this.blurTag(selectedTag)
+      }
+
+      option.classList.add('focus')
     }
-  }
 
 
 
 
 
-  /******************************************************************************\
-    handleInput
-  \******************************************************************************/
+    /**************************************************************************\
+      focusTag
+    \**************************************************************************/
 
-  prototype.handleInput = function handleInput () {
-    this.clearSelectedTag()
-
-    this.search(this.input.value)
-  }
-
-
-
-
-
-  /******************************************************************************\
-    handleLeftArrow
-  \******************************************************************************/
-
-  prototype.handleLeftArrow = function handleLeftArrow () {
-    if (this.shouldCaptureKeybind()) {
-      event.preventDefault()
-
+    focusTag (tag) {
       let selectedTag = this.tagList.querySelector('.focus')
 
       if (selectedTag) {
-        let previousTag = selectedTag.previousElementSibling
+        this.blurTag(selectedTag)
+      }
 
-        if (previousTag) {
-          this.clearSelectedTag()
-          this.focusTag(previousTag)
+      tag.classList.add('focus')
+    }
+
+
+
+
+
+    /**************************************************************************\
+      getElementValue
+    \**************************************************************************/
+
+    getElementValue (element) {
+      if (element.hasAttribute('data-id')) {
+        return {
+          id: element.getAttribute('data-id'),
+          value: element.getAttribute('data-value')
         }
       } else {
-        selectedTag = this.tagList.querySelector('li:last-of-type')
+        return element.getAttribute('data-value')
+      }
+    }
+
+
+
+
+
+    /**************************************************************************\
+      handleDuplicate
+    \**************************************************************************/
+
+    handleDuplicate () {
+      this.triggerEvent('error', 'duplicate')
+      this.log('warn', 'duplicate tag')
+    }
+
+
+
+
+
+    /**************************************************************************\
+      handleInvalid
+    \**************************************************************************/
+
+    handleInvalid () {
+      this.triggerEvent('error', 'invalid')
+      this.log('warn', 'invalid tag')
+    }
+
+
+
+
+
+    /**************************************************************************\
+      handleDelete
+    \**************************************************************************/
+
+    handleDelete () {
+      if (this.shouldCaptureKeybind()) {
+        event.preventDefault()
+
+        let selectedTag = this.tagList.querySelector('.focus')
 
         if (selectedTag) {
+          let previousTag = selectedTag.previousElementSibling
+
+          if (previousTag) {
+            this.focusTag(previousTag)
+          }
+
+          this.removeTag(selectedTag)
+
+        } else if (selectedTag = this.tagList.querySelector('li:last-of-type')) {
           this.focusTag(selectedTag)
         }
       }
     }
-  }
 
 
 
 
 
-  /******************************************************************************\
-    handleKeybinds
-  \******************************************************************************/
+    /**************************************************************************\
+      handleDownArrow
+    \**************************************************************************/
 
-  prototype.handleKeybinds = function handleKeybinds (event) {
-    switch (event.which) {
-      case 9: // tab
-      case 13: // enter
-      case 188: // comma
-        this.handleReturn(event)
-        break
-
-      case 8: // backspace
-      case 46: // delete
-        this.handleDelete()
-        break
-
-      case 37: // left arrow
-        this.handleLeftArrow()
-        break
-
-      case 39: // right arrow
-        this.handleRightArrow()
-        break
-
-      case 38: // up arrow
-        this.handleUpArrow()
-        break
-
-      case 40: // down arrow
-        this.handleDownArrow()
-        break
-    }
-  }
-
-
-
-
-
-  /******************************************************************************\
-    handleOptionClick
-  \******************************************************************************/
-
-  prototype.handleOptionClick = function handleOptionClick (event) {
-    event.preventDefault()
-
-    let target = event.target
-    let value = this.getElementValue(target)
-
-    if (this.addTag(value)) {
-      this.clearInput()
-      this.clearOptions()
-    }
-
-    this.input.focus()
-
-    this.log('groupCollapsed', 'handleOptionClick')
-    this.log('value', value)
-    this.log('target', target)
-    this.log(this.input)
-    this.log('groupEnd')
-  }
-
-
-
-
-  /******************************************************************************\
-    handleReturn
-  \******************************************************************************/
-
-  prototype.handleReturn = function handleReturn (event) {
-    let firstOption = this.optionList.querySelector('li:first-of-type')
-    let selectedOption = this.optionList.querySelector('.focus')
-    let value
-
-    if (!this.input.value) {
-      return
-    }
-
-    if (this.allowNew) {
-      value = this.input.value
-    } else if (firstOption) {
-      value = this.getElementValue(firstOption)
-    }
-
-    if (selectedOption) {
-      value = this.getElementValue(selectedOption)
-    }
-
-    if (!this.allowNew && !firstOption) {
-      this.handleInvalid()
-      return
-    }
-
-    if (value) {
+    handleDownArrow () {
       event.preventDefault()
 
-      this.addTag(value)
+      let selectedOption = this.optionList.querySelector('.focus')
 
-      this.clearInput()
-      this.clearOptions()
+      if (selectedOption) {
+        let nextOption = selectedOption.nextElementSibling
+
+        if (nextOption) {
+          this.blurOption(selectedOption)
+          this.focusOption(nextOption)
+        }
+      } else {
+        selectedOption = this.optionList.querySelector('li:first-of-type')
+
+        if (selectedOption) {
+          this.focusOption(selectedOption)
+        }
+      }
     }
-  }
 
 
 
 
 
-  /******************************************************************************\
-    handleRightArrow
-  \******************************************************************************/
+    /**************************************************************************\
+      handleInput
+    \**************************************************************************/
 
-  prototype.handleRightArrow = function handleRightArrow () {
-    if (this.shouldCaptureKeybind()) {
+    handleInput () {
+      this.clearSelectedTag()
+
+      this.search(this.input.value)
+    }
+
+
+
+
+
+    /**************************************************************************\
+      handleLeftArrow
+    \**************************************************************************/
+
+    handleLeftArrow () {
+      if (this.shouldCaptureKeybind()) {
+        event.preventDefault()
+
+        let selectedTag = this.tagList.querySelector('.focus')
+
+        if (selectedTag) {
+          let previousTag = selectedTag.previousElementSibling
+
+          if (previousTag) {
+            this.clearSelectedTag()
+            this.focusTag(previousTag)
+          }
+        } else {
+          selectedTag = this.tagList.querySelector('li:last-of-type')
+
+          if (selectedTag) {
+            this.focusTag(selectedTag)
+          }
+        }
+      }
+    }
+
+
+
+
+
+    /**************************************************************************\
+      handleKeybinds
+    \**************************************************************************/
+
+    handleKeybinds (event) {
+      switch (event.which) {
+        case 9: // tab
+        case 13: // enter
+        case 188: // comma
+          this.handleReturn(event)
+          break
+
+        case 8: // backspace
+        case 46: // delete
+          this.handleDelete()
+          break
+
+        case 37: // left arrow
+          this.handleLeftArrow()
+          break
+
+        case 39: // right arrow
+          this.handleRightArrow()
+          break
+
+        case 38: // up arrow
+          this.handleUpArrow()
+          break
+
+        case 40: // down arrow
+          this.handleDownArrow()
+          break
+      }
+    }
+
+
+
+
+
+    /**************************************************************************\
+      handleOptionClick
+    \**************************************************************************/
+
+    handleOptionClick (event) {
       event.preventDefault()
 
-      let selectedTag = this.tagList.querySelector('.focus')
+      let target = event.target
+      let value = this.getElementValue(target)
 
-      if (selectedTag) {
-        let nextTag = selectedTag.nextElementSibling
-
-        if (nextTag) {
-          this.focusTag(nextTag)
-        }
-
-        this.clearSelectedTag()
-      }
-    }
-  }
-
-
-
-
-
-  /******************************************************************************\
-    handleUpArrow
-  \******************************************************************************/
-
-  prototype.handleUpArrow = function handleUpArrow () {
-    event.preventDefault()
-
-    let selectedOption = this.optionList.querySelector('.focus')
-
-    if (selectedOption) {
-      let previousOption = selectedOption.previousElementSibling
-
-      if (previousOption) {
-        this.focusOption(previousOption)
+      if (this.addTag(value)) {
+        this.clearInput()
+        this.clearOptions()
       }
 
-      this.blurOption(selectedOption)
-    }
-  }
+      this.input.focus()
 
-
-
-
-
-  /******************************************************************************\
-    hideOptions
-  \******************************************************************************/
-
-  prototype.hideOptions = function hideOptions () {
-    this.optionList.classList.add('hide')
-  }
-
-
-
-
-
-  /******************************************************************************\
-    initializeStickit
-  \******************************************************************************/
-
-  prototype.initializeStickit = function initializeStickit () {
-    if (window.Backbone && window.Backbone.Stickit) {
-      Backbone.Stickit.addHandler({
-        events: ['blur'],
-        getVal: function ($el, event, options) {
-          return $el.val()
-        },
-        selector: 'tags-input'
-
-      })
-    }
-  }
-
-
-
-
-
-  /******************************************************************************\
-    isDuplicate
-  \******************************************************************************/
-
-  prototype.isDuplicate = function isDuplicate (value) {
-    let ret
-
-    if (typeof value === 'string') {
-      ret = this.value.indexOf(value) !== -1
-    } else {
-      ret = this.matchValue(value) !== -1
+      this.log('groupCollapsed', 'handleOptionClick')
+      this.log('value', value)
+      this.log('target', target)
+      this.log(this.input)
+      this.log('groupEnd')
     }
 
-    return ret
-  }
 
 
 
+    /**************************************************************************\
+      handleReturn
+    \**************************************************************************/
 
+    handleReturn (event) {
+      let firstOption = this.optionList.querySelector('li:first-of-type')
+      let selectedOption = this.optionList.querySelector('.focus')
+      let value
 
-  /******************************************************************************\
-    log
-  \******************************************************************************/
-
-  prototype.log = function log () {
-    // Default to using console.log
-    let type = 'log'
-
-    // Check to see if the first argument passed is a console function. If so,
-    // remove it from the arguments and use it instead of log
-    if (Object.keys(console).indexOf(arguments[0]) !== -1) {
-      type = [].shift.call(arguments)
-    }
-
-    if (this.debug) {
-      console[type].apply(this, arguments)
-    }
-  }
-
-
-
-
-
-  /******************************************************************************\
-    matchValue
-  \******************************************************************************/
-
-  prototype.matchValue = function matchValue (value) {
-    for (let i = 0, length = this.value.length; i < length; i++) {
-      if (this.value[i].id && value.id) {
-        if (this.value[i].id === value.id) {
-          return i
-        }
-      } else if (this.value[i].value === value.value) {
-        return i
-      }
-    }
-
-    return -1
-  }
-
-
-
-
-
-  /******************************************************************************\
-    removeTag
-  \******************************************************************************/
-
-  prototype.removeTag = function removeTag (tag) {
-    let value = this.getElementValue(tag)
-    let index
-
-    if (typeof value === 'string') {
-      index = this.value.indexOf(value)
-    } else {
-      this.matchValue(value)
-    }
-
-    this.value.splice(index, 1)
-
-    tag.querySelector('button').removeEventListener('mousedown', this.removeTag)
-    tag.remove()
-
-    this.triggerEvent('remove', value)
-
-    this.log('groupCollapsed', 'removing tag')
-    this.log('value:', value)
-    this.log('groupEnd')
-  }
-
-
-
-
-
-  /******************************************************************************\
-    search
-  \******************************************************************************/
-
-  prototype.search = function search (query) {
-    if (query) {
-      this.triggerEvent('search', query)
-    }
-
-    this.log('groupCollapsed', 'search')
-    this.log(query ? ('query:' + query) : 'no query')
-    this.log('groupEnd')
-  }
-
-
-
-
-
-  /******************************************************************************\
-    shouldCaptureKeybind
-  \******************************************************************************/
-
-  prototype.shouldCaptureKeybind = function shouldCaptureKeybind () {
-    let input = this.input
-
-    if (!input.selectionStart && !input.selectionEnd) {
-      return true
-    }
-
-    return false
-  }
-
-
-
-
-
-  /******************************************************************************\
-    showOptions
-  \******************************************************************************/
-
-  prototype.showOptions = function showOptions () {
-    this.optionList.classList.remove('hide')
-  }
-
-
-
-
-
-  /******************************************************************************\
-    triggerEvent
-  \******************************************************************************/
-
-  prototype.triggerEvent = function triggerEvent (type, detail) {
-    this.dispatchEvent(new CustomEvent(type, {
-      detail: detail
-    }))
-  }
-
-
-
-
-
-  /******************************************************************************\
-    updateAttribute
-  \******************************************************************************/
-
-  prototype.updateAttribute = function updateAttribute (attribute, property) {
-    let hasAttribute = this.hasAttribute(attribute)
-    let value = this.getAttribute(attribute)
-
-    // If the attribute doesn't exist, we'll just return false
-    if (!hasAttribute) {
-      value = false
-
-    // getAttribute returns an empty string for boolean attributes
-    } else if (typeof value === 'string' && value === '') {
-      value = true
-    }
-
-    if (typeof value === 'string' && /(true|false)/gi.test(value)) {
-      value = value.toLowerCase() === 'true'
-    }
-
-    this[property] = value
-  }
-
-
-
-
-
-  /******************************************************************************\
-    updateOptions
-  \******************************************************************************/
-
-  prototype.updateOptions = function updateOptions (options, merge) {
-    if (!merge) {
-      this.clearOptions()
-    }
-
-    options.forEach(option => {
-      if (merge && this.findOption(option)) {
+      if (!this.input.value) {
         return
       }
 
-      let optionElement = this.createOption(option)
+      if (this.allowNew) {
+        value = this.input.value
+      } else if (firstOption) {
+        value = this.getElementValue(firstOption)
+      }
 
-      optionElement.addEventListener('mousedown', this.handleOptionClick.bind(this))
+      if (selectedOption) {
+        value = this.getElementValue(selectedOption)
+      }
 
-      this.optionList.appendChild(optionElement)
-    })
+      if (!this.allowNew && !firstOption) {
+        this.handleInvalid()
+        return
+      }
 
-    this.log('groupCollapsed', 'updating options')
-    this.log('options:', options)
-    this.log('groupEnd')
+      if (value) {
+        event.preventDefault()
+
+        this.addTag(value)
+
+        this.clearInput()
+        this.clearOptions()
+      }
+    }
+
+
+
+
+
+    /**************************************************************************\
+      handleRightArrow
+    \**************************************************************************/
+
+    handleRightArrow () {
+      if (this.shouldCaptureKeybind()) {
+        event.preventDefault()
+
+        let selectedTag = this.tagList.querySelector('.focus')
+
+        if (selectedTag) {
+          let nextTag = selectedTag.nextElementSibling
+
+          if (nextTag) {
+            this.focusTag(nextTag)
+          }
+
+          this.clearSelectedTag()
+        }
+      }
+    }
+
+
+
+
+
+    /**************************************************************************\
+      handleUpArrow
+    \**************************************************************************/
+
+    handleUpArrow () {
+      event.preventDefault()
+
+      let selectedOption = this.optionList.querySelector('.focus')
+
+      if (selectedOption) {
+        let previousOption = selectedOption.previousElementSibling
+
+        if (previousOption) {
+          this.focusOption(previousOption)
+        }
+
+        this.blurOption(selectedOption)
+      }
+    }
+
+
+
+
+
+    /**************************************************************************\
+      hideOptions
+    \**************************************************************************/
+
+    hideOptions () {
+      this.optionList.classList.add('hide')
+    }
+
+
+
+
+
+    /**************************************************************************\
+      initializeStickit
+    \**************************************************************************/
+
+    initializeStickit () {
+      if (window.Backbone && window.Backbone.Stickit) {
+        Backbone.Stickit.addHandler({
+          events: ['blur'],
+          getVal: function ($el, event, options) {
+            return $el.val()
+          },
+          selector: 'tags-input'
+
+        })
+      }
+    }
+
+
+
+
+
+    /**************************************************************************\
+      isDuplicate
+    \**************************************************************************/
+
+    isDuplicate (value) {
+      let ret
+
+      if (typeof value === 'string') {
+        ret = this.value.indexOf(value) !== -1
+      } else {
+        ret = this.matchValue(value) !== -1
+      }
+
+      return ret
+    }
+
+
+
+
+
+    /**************************************************************************\
+      log
+    \**************************************************************************/
+
+    log () {
+      // Default to using console.log
+      let type = 'log'
+
+      // Check to see if the first argument passed is a console function. If so,
+      // remove it from the arguments and use it instead of log
+      if (Object.keys(console).indexOf(arguments[0]) !== -1) {
+        type = [].shift.call(arguments)
+      }
+
+      if (this.debug) {
+        console[type].apply(this, arguments)
+      }
+    }
+
+
+
+
+
+    /**************************************************************************\
+      matchValue
+    \**************************************************************************/
+
+    matchValue (value) {
+      for (let i = 0, length = this.value.length; i < length; i++) {
+        if (this.value[i].id && value.id) {
+          if (this.value[i].id === value.id) {
+            return i
+          }
+        } else if (this.value[i].value === value.value) {
+          return i
+        }
+      }
+
+      return -1
+    }
+
+
+
+
+
+    /**************************************************************************\
+      removeTag
+    \**************************************************************************/
+
+    removeTag (tag) {
+      let value = this.getElementValue(tag)
+      let index
+
+      if (typeof value === 'string') {
+        index = this.value.indexOf(value)
+      } else {
+        this.matchValue(value)
+      }
+
+      this.value.splice(index, 1)
+
+      tag.querySelector('button').removeEventListener('mousedown', this.removeTag)
+      tag.remove()
+
+      this.triggerEvent('remove', value)
+
+      this.log('groupCollapsed', 'removing tag')
+      this.log('value:', value)
+      this.log('groupEnd')
+    }
+
+
+
+
+
+    /**************************************************************************\
+      search
+    \**************************************************************************/
+
+    search (query) {
+      if (query) {
+        this.triggerEvent('search', query)
+      }
+
+      this.log('groupCollapsed', 'search')
+      this.log(query ? ('query:' + query) : 'no query')
+      this.log('groupEnd')
+    }
+
+
+
+
+
+    /**************************************************************************\
+      shouldCaptureKeybind
+    \**************************************************************************/
+
+    shouldCaptureKeybind () {
+      let input = this.input
+
+      if (!input.selectionStart && !input.selectionEnd) {
+        return true
+      }
+
+      return false
+    }
+
+
+
+
+
+    /**************************************************************************\
+      showOptions
+    \**************************************************************************/
+
+    showOptions () {
+      this.optionList.classList.remove('hide')
+    }
+
+
+
+
+
+    /**************************************************************************\
+      triggerEvent
+    \**************************************************************************/
+
+    triggerEvent (type, detail) {
+      this.dispatchEvent(new CustomEvent(type, {
+        detail: detail
+      }))
+    }
+
+
+
+
+
+    /**************************************************************************\
+      updateAttribute
+    \**************************************************************************/
+
+    updateAttribute (attribute, property) {
+      let hasAttribute = this.hasAttribute(attribute)
+      let value = this.getAttribute(attribute)
+
+      // If the attribute doesn't exist, we'll just return false
+      if (!hasAttribute) {
+        value = false
+
+      // getAttribute returns an empty string for boolean attributes
+      } else if (typeof value === 'string' && value === '') {
+        value = true
+      }
+
+      if (typeof value === 'string' && /(true|false)/gi.test(value)) {
+        value = value.toLowerCase() === 'true'
+      }
+
+      this[property] = value
+    }
+
+
+
+
+
+    /**************************************************************************\
+      updateOptions
+    \**************************************************************************/
+
+    updateOptions (options, merge) {
+      if (!merge) {
+        this.clearOptions()
+      }
+
+      options.forEach(option => {
+        if (merge && this.findOption(option)) {
+          return
+        }
+
+        let optionElement = this.createOption(option)
+
+        optionElement.addEventListener('mousedown', this.handleOptionClick.bind(this))
+
+        this.optionList.appendChild(optionElement)
+      })
+
+      this.log('groupCollapsed', 'updating options')
+      this.log('options:', options)
+      this.log('groupEnd')
+    }
+
+
+
+
+
+    /**************************************************************************\
+      Getters
+    \**************************************************************************/
+
+    get placeholder () {
+      return this._placeholder || (this._placeholder = '')
+    }
+
+
+
+
+
+    /**************************************************************************\
+      Setters
+    \**************************************************************************/
+
+    set placeholder (value) {
+      this._placeholder = value
+
+      if (this.input) {
+        this.input.setAttribute('placeholder', value)
+      }
+    }
   }
 
 
 
 
 
-  document.registerElement('tags-input', {
-    prototype: prototype
-  })
+  customElements.define('tags-input', TagsInput)
 })()

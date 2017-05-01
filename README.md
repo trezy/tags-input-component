@@ -8,7 +8,7 @@ Import the script in your code and create a new `tags-input`:
 </head>
 
 <body>
-  <tags-input data-multiple></tags-input>
+  <tags-input allow-multiple></tags-input>
 </body>
 ```
 
@@ -18,7 +18,7 @@ Woot, you have a tags-input! However, `tags-input` only provides the element. Th
 // Test data
 var data = ['Amy', 'Annalise', 'Casey', 'Erica', 'Fong', 'George', 'Jason', 'Jen', 'Jim', 'Josh', 'Kelly', 'Kevin', 'Maggie', 'Nathan', 'Ryland', 'SaVance', 'Trezy', 'Vannessa', 'YJ', 'Zach']
 
-// Grad a reference to our tags-input
+// Grab a reference to our tags-input
 var tagsInput = document.querySelector('tags-input')
 
 // Listen for the user to start typing
@@ -59,11 +59,12 @@ This is where it all begins. a `tags-input` element can be mostly configured via
 | Attribute | Default | Required/Optional | Description |
 |---|---|---|---|
 | `data-debug` | false | optional | Turns on debugging for this `tags-input`. When an element is created with this attribute, it will log out all of its configuration oprions, as well as logging out on all events. |
-| `data-duplicates` | false | optional | Allow values to be duplicated. |
-| `data-multiple` | false | optional | Allow the user to add more than one tag. |
-| `data-new` | false | optional | Allow the user to create tags that are not in the options list. |
+| `allow-duplicates` | false | optional | Allow values to be duplicated. |
+| `allow-multiple` | false | optional | Allow the user to add more than one tag. |
+| `allow-new` | false | optional | Allow the user to create tags that are not in the options list. |
+| `placeholder` | false | optional | Sets the placeholder text for our input. |
 
-Any of these attributes can be set as a boolean attribute, e.g. `<tags-input data-multiple>`, or an attribute with a boolean string, e.g. `<tags-input data-multiple="true" data-new="false">`.
+Any of these attributes can be set as a boolean attribute, e.g. `<tags-input allow-multiple>`, or an attribute with a boolean string, e.g. `<tags-input allow-multiple="true" allow-new="false">`.
 
 ### Events
 
@@ -124,3 +125,29 @@ Empties the contents of the dropdown list. This is useful when using `updateOpti
 #### `updateOptions(options, merge)`
 
 Pass an array of options to be displayed in the dropdown list. Options can be either strings or objects. Objects must have a `value` property which will be displayed, and may optionally have an `id` property.
+
+### Styling
+
+#### The input
+
+#### Tags
+
+You can set the colors for tags via the following CSS variables:
+  --tag-background-color
+  --tag-background-color-focus
+  --tag-text-color
+  --tag-text-color-focus
+
+You can set the colors for tag's close buttons via the following CSS variables:
+  --close-button-background-color
+  --close-button-background-color-hover
+  --close-button-text-color
+  --close-button-text-color-hover
+
+#### Options
+
+You can set the colors for options via the following CSS variables:
+  --option-background-color
+  --option-background-color-focus
+  --option-text-color
+  --option-text-color-focus
